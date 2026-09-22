@@ -1,0 +1,634 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* =========================================================
+   GLOBAL
+========================================================= */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: #fafbff;
+  color: #0a1128;
+}
+
+button,
+input,
+textarea,
+select {
+  font-family: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+.border-subtle {
+  border-color: rgba(0, 0, 0, 0.04);
+}
+
+/* =========================================================
+   PRIMARY BUTTON
+========================================================= */
+
+.btn-primary {
+  background: var(--accent-color, #4f46e5);
+  transition: all 0.2s;
+}
+
+.btn-primary:hover {
+  filter: brightness(0.9);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(79, 70, 229, 0.25);
+}
+
+/* =========================================================
+   APPEARANCE (theme / font size / animations)
+   Driven by Settings -> Appearance, applied in src/App.jsx
+   via src/utils/appearance.js.
+========================================================= */
+
+html.no-animations,
+html.no-animations * {
+  transition-duration: 0ms !important;
+  animation-duration: 0ms !important;
+}
+
+html.dark body {
+  background: #0b0f19;
+  color: #e5e7eb;
+}
+
+html.dark .bg-white {
+  background-color: #131826 !important;
+}
+
+html.dark .bg-\[\#fafbff\] {
+  background-color: #0b0f19 !important;
+}
+
+html.dark .bg-gray-50 {
+  background-color: #1a2032 !important;
+}
+
+html.dark .text-gray-800,
+html.dark .text-gray-900,
+html.dark .text-gray-700 {
+  color: #e5e7eb !important;
+}
+
+html.dark .text-gray-600,
+html.dark .text-gray-500,
+html.dark .text-gray-400 {
+  color: #9ca3af !important;
+}
+
+html.dark .border-gray-100,
+html.dark .border-gray-200,
+html.dark .border-subtle {
+  border-color: #232838 !important;
+}
+
+/* =========================================================
+   NAVBAR
+========================================================= */
+
+.mobile-menu-btn {
+  display: none;
+  background: transparent;
+  border: none;
+  color: #111827;
+}
+
+.desktop-nav {
+  display: flex;
+}
+
+/* =========================================================
+   SIGN IN / SIGN UP DROPDOWN
+   Matches the original frontend
+========================================================= */
+
+.auth-dropdown-wrapper {
+  position: relative;
+}
+
+.original-auth-dropdown {
+  display: none;
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  width: 180px;
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  padding: 8px;
+  z-index: 100;
+}
+
+.original-auth-dropdown-show {
+  display: block;
+}
+
+.original-auth-dropdown-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  color: #6b7280;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s ease;
+}
+
+.original-auth-dropdown-item:hover {
+  background: #f9fafb;
+  color: #111827;
+}
+
+.original-auth-dropdown-item i {
+  width: 16px;
+  text-align: center;
+}
+
+/* =========================================================
+   SIDEBAR
+========================================================= */
+
+.sidebar {
+  width: 256px;
+  min-height: calc(100vh - 80px);
+  background: white;
+  padding: 1.5rem;
+  position: fixed;
+  left: 0;
+  top: 80px;
+  z-index: 40;
+}
+
+.overlay {
+  display: none;
+}
+
+/* =========================================================
+   AUTH PAGES
+========================================================= */
+
+.auth-container {
+  min-height: calc(100vh - 80px);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 430px;
+  background: #ffffff;
+  border-radius: 18px;
+  padding: 32px;
+  box-shadow:
+    0 10px 30px rgba(0, 0, 0, 0.04),
+    0 2px 8px rgba(0, 0, 0, 0.02);
+  border: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+.logo-text {
+  color: #0a1128;
+}
+
+.auth-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 7px;
+}
+
+.auth-input {
+  width: 100%;
+  height: 46px;
+  padding: 0 14px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #111827;
+  font-size: 14px;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.auth-input::placeholder {
+  color: #9ca3af;
+}
+
+.auth-input:focus {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.08);
+}
+
+.auth-error {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: #ef4444;
+  font-size: 12px;
+  margin-top: 5px;
+}
+
+.auth-success {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: #16a34a;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 10px;
+  padding: 10px;
+  font-size: 13px;
+}
+
+.auth-link {
+  color: #4f46e5;
+  font-weight: 500;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.auth-link:hover {
+  color: #4338ca;
+}
+
+.password-wrapper {
+  position: relative;
+}
+
+.password-wrapper .auth-input {
+  padding-right: 44px;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  color: #9ca3af;
+  padding: 4px;
+  cursor: pointer;
+}
+
+.password-toggle:hover {
+  color: #4b5563;
+}
+
+/* =========================================================
+   AUTH DIVIDER
+========================================================= */
+
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #9ca3af;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.auth-divider hr {
+  flex: 1;
+  border: 0;
+  border-top: 1px solid #e5e7eb;
+}
+
+/* =========================================================
+   GOOGLE BUTTON
+========================================================= */
+
+.google-btn {
+  width: 100%;
+  height: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 9999px;
+  color: #374151;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.google-btn:hover {
+  background: #f9fafb;
+  border-color: #d1d5db;
+}
+
+/* =========================================================
+   PASSWORD STRENGTH
+========================================================= */
+
+.strength-bar {
+  width: 100%;
+  height: 4px;
+  background: #f3f4f6;
+  border-radius: 9999px;
+  overflow: hidden;
+}
+
+.strength-bar .fill {
+  height: 100%;
+  width: 0%;
+  border-radius: 9999px;
+  transition: all 0.25s ease;
+}
+
+.strength-label {
+  font-size: 11px;
+  margin-top: 4px;
+}
+
+/* =========================================================
+   CARDS
+========================================================= */
+
+.card-hover {
+  transition: all 0.2s ease;
+}
+
+.card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.06);
+}
+
+/* =========================================================
+   WORKFLOW
+========================================================= */
+
+.workflow-agent {
+  transition: all 0.25s ease;
+}
+
+.workflow-agent:hover {
+  transform: translateY(-1px);
+}
+
+.workflow-line {
+  width: 2px;
+  background: #e5e7eb;
+}
+
+.agent-pending {
+  background: #eef2ff;
+  color: #6366f1;
+}
+
+.agent-running {
+  background: #e0e7ff;
+  color: #4f46e5;
+}
+
+.agent-completed {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+/* =========================================================
+   ANIMATIONS
+========================================================= */
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulseSoft {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.55;
+  }
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease;
+}
+
+.slide-up {
+  animation: slideUp 0.35s ease;
+}
+
+.pulse-soft {
+  animation: pulseSoft 1.5s ease-in-out infinite;
+}
+
+/* =========================================================
+   SCROLLBAR
+========================================================= */
+
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+/* =========================================================
+   SETTINGS
+========================================================= */
+
+.settings-sidebar {
+  background: #ffffff;
+}
+
+.settings-mobile-nav {
+  display: none;
+}
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 768px) {
+
+  .mobile-menu-btn {
+    display: block !important;
+  }
+
+  .desktop-nav {
+    display: none !important;
+  }
+
+  .sidebar {
+    transform: translateX(-100%);
+    position: fixed;
+    z-index: 50;
+    width: 280px;
+    height: 100vh;
+    min-height: 100vh;
+    top: 0;
+    left: 0;
+    background: white;
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.06);
+    padding: 1.5rem;
+    transition: transform 0.3s ease;
+  }
+
+  .sidebar.open {
+    transform: translateX(0);
+  }
+
+  .overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.15);
+    z-index: 40;
+  }
+
+  .overlay.open {
+    display: block;
+  }
+
+  .settings-sidebar {
+    display: none !important;
+  }
+
+  .settings-mobile-nav {
+    display: flex !important;
+  }
+
+  .auth-container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .auth-card {
+    padding: 24px;
+  }
+}
+
+/* =========================================================
+   SMALL MOBILE
+========================================================= */
+
+@media (max-width: 480px) {
+
+  .auth-card {
+    padding: 20px;
+    border-radius: 14px;
+  }
+
+  .auth-container {
+    padding-top: 20px;
+  }
+
+  .original-auth-dropdown {
+    width: 170px;
+  }
+}
+/* =========================================================
+   PLATFORM SIDEBAR FIX
+   ========================================================= */
+
+/* Desktop sidebar occupies its own 256px area */
+@media (min-width: 769px) {
+  .sidebar {
+    width: 16rem;
+    position: fixed;
+    left: 0;
+    top: 73px;
+    height: calc(100vh - 73px);
+    overflow-y: auto;
+    z-index: 20;
+  }
+}
+
+/* Mobile sidebar */
+.sidebar-mobile {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .sidebar-mobile {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 280px;
+    height: 100vh;
+    background: white;
+    z-index: 50;
+    padding: 1.5rem;
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.06);
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+  }
+
+  .sidebar-mobile.open {
+    transform: translateX(0);
+  }
+}
+
+/* Prevent platform content from becoming wider than the viewport */
+main {
+  min-width: 0;
+}
+
+/* Make sure grids/cards can shrink instead of going underneath sidebar */
+main > * {
+  min-width: 0;
+}
