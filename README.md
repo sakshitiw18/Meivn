@@ -34,7 +34,7 @@
 - [Reliability](#reliability)
 - [Troubleshooting](#troubleshooting)
 - [Limitations & Future Scope](#limitations--future-scope)
-- [Team](#team)
+
 
 ---
 
@@ -50,7 +50,8 @@ Every account has its own private workspace: its own projects, dashboard statist
 
 | Landing page | Dashboard |
 |:---:|:---:|
-| ![Landing page](docs/screenshots/landing.png) | ![Dashboard](docs/screenshots/dashboard.png) |
+| ![Landing page]<img width="1843" height="861" alt="Screenshot (811)" src="https://github.com/user-attachments/assets/56cb99e3-01b9-4680-8d61-2ece1616fca7" />
+ | ![Dashboard](docs/screenshots/dashboard.png) |
 
 | New project | Projects |
 |:---:|:---:|
