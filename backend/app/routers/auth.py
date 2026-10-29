@@ -1,6 +1,8 @@
 """
 Authentication: email/password signup+login, Google Sign-In, and the
-get_current_user dependency used to protect the Settings endpoints.
+get_current_user dependency used to protect the Settings and Projects
+endpoints. The platform requires sign-in; every account has its own
+settings, sessions and projects.
 
 Sessions: every successful signup/login creates a SessionLog row (device =
 browser User-Agent), and the returned token is tied to that session's id.
@@ -9,14 +11,18 @@ Settings -> Security's "Active sessions" / "Login history" / "Revoke" /
 """
 import json
 import base64
+import os
+import secrets
+import string
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app.config import get_settings
 from app.database import get_db
-from app.models import User, SessionLog
+from app.models import User, SessionLog, Task
 from app.schemas import SignupRequest, LoginRequest, GoogleAuthRequest, AuthResponse, UserOut
 from app.security import hash_password, verify_password, create_token, verify_token
 
@@ -25,29 +31,38 @@ settings = get_settings()
 
 bearer_scheme = HTTPBearer(auto_error=False)
 
+# Email of the old shared "Guest" account from the period when the platform was
+# open without sign-in. Projects created back then belong to nobody (or to this
+# account); see _adopt_legacy_projects below.
 GUEST_EMAIL = "guest@local"
 
 
-def _get_or_create_guest_user(db: Session) -> User:
+def _generate_username(db: Session) -> str:
+    """Random, unique username handed to every new account (editable later in Settings)."""
+    alphabet = string.ascii_lowercase + string.digits
+    while True:
+        candidate = "user_" + "".join(secrets.choice(alphabet) for _ in range(8))
+        if not db.query(User).filter(User.username == candidate).first():
+            return candidate
+
+
+def _adopt_legacy_projects(db: Session, user: User) -> None:
     """
-    Single shared account used for anyone browsing the platform without
-    signing in — this is what makes Dashboard/Settings/etc. work exactly
-    like they did before sign-in existed, for visitors who never sign up.
+    Projects built before accounts owned their own projects have no owner.
+    If LEGACY_PROJECTS_OWNER_EMAIL (backend .env) matches the account that is
+    signing in, those projects are attached to it, once. Nothing is deleted.
     """
+    owner_email = (os.environ.get("LEGACY_PROJECTS_OWNER_EMAIL") or "").strip().lower()
+    if not owner_email or user.email != owner_email:
+        return
+
+    conditions = [Task.user_id.is_(None)]
     guest = db.query(User).filter(User.email == GUEST_EMAIL).first()
+    if guest:
+        conditions.append(Task.user_id == guest.id)
 
-    if not guest:
-        guest = User(
-            name="Guest",
-            email=GUEST_EMAIL,
-            username="guest",
-            auth_provider="guest",
-        )
-        db.add(guest)
-        db.commit()
-        db.refresh(guest)
-
-    return guest
+    db.query(Task).filter(or_(*conditions)).update({Task.user_id: user.id}, synchronize_session=False)
+    db.commit()
 
 
 # ---------------------------------------------------------------------------
@@ -76,32 +91,9 @@ def get_current_user(
     return user
 
 
-def get_current_user_or_guest(
-    credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
-    db: Session = Depends(get_db),
-) -> User:
-    """
-    Used by routers/settings.py instead of get_current_user, so the whole
-    platform (Dashboard, Projects, Settings, etc.) stays open to everyone —
-    no sign-in required. If a valid session token IS present, that user's
-    own settings/data are used; otherwise everyone shares one "Guest"
-    account, matching how the app behaved before sign-in existed. Signing
-    in remains available for anyone who wants their own separate account —
-    it's just never required.
-    """
-    if credentials:
-        payload = verify_token(credentials.credentials)
-        if payload:
-            session = db.query(SessionLog).filter(SessionLog.id == payload["session_id"]).first()
-            if session and not session.revoked:
-                user = db.query(User).filter(User.id == payload["user_id"]).first()
-                if user:
-                    return user
-
-    return _get_or_create_guest_user(db)
-
-
 def _create_session_and_token(db: Session, user: User, request: Request) -> str:
+    _adopt_legacy_projects(db, user)
+
     device = request.headers.get("user-agent", "Unknown device")[:255]
 
     db.query(SessionLog).filter(SessionLog.user_id == user.id).update({SessionLog.is_current: False})
@@ -133,9 +125,9 @@ def signup(payload: SignupRequest, request: Request, db: Session = Depends(get_d
     if len(payload.password) < 6:
         raise HTTPException(status_code=400, detail="Password must be at least 6 characters")
 
-    username = payload.username or email.split("@")[0]
-    if db.query(User).filter(User.username == username).first():
-        username = f"{username}{__import__('random').randint(100, 999)}"
+    username = (payload.username or "").strip()
+    if not username or db.query(User).filter(User.username == username).first():
+        username = _generate_username(db)
 
     salt, hashed = hash_password(payload.password)
 
@@ -148,11 +140,18 @@ def signup(payload: SignupRequest, request: Request, db: Session = Depends(get_d
         auth_provider="local",
     )
     db.add(user)
-    db.commit()
-    db.refresh(user)
-
-    token = _create_session_and_token(db, user, request)
-    return {"token": token, "user": user}
+    try:
+        db.flush()
+        token = _create_session_and_token(db, user, request)
+        db.refresh(user)
+        return {"token": token, "user": user}
+    except Exception:
+        db.rollback()
+        orphaned = db.query(User).filter(User.email == email).first()
+        if orphaned and not db.query(SessionLog).filter(SessionLog.user_id == orphaned.id).first():
+            db.delete(orphaned)
+            db.commit()
+        raise
 
 
 @router.post("/login", response_model=AuthResponse)
@@ -211,20 +210,26 @@ def google_auth(payload: GoogleAuthRequest, request: Request, db: Session = Depe
     user = db.query(User).filter(User.email == email).first()
 
     if not user:
-        username = email.split("@")[0]
-        if db.query(User).filter(User.username == username).first():
-            username = f"{username}{__import__('random').randint(100, 999)}"
-
         user = User(
             name=name,
             email=email,
-            username=username,
+            username=_generate_username(db),
             auth_provider="google",
             google_id=google_id,
         )
         db.add(user)
-        db.commit()
-        db.refresh(user)
+        try:
+            db.flush()
+            token = _create_session_and_token(db, user, request)
+            db.refresh(user)
+            return {"token": token, "user": user}
+        except Exception:
+            db.rollback()
+            orphaned = db.query(User).filter(User.email == email).first()
+            if orphaned and not db.query(SessionLog).filter(SessionLog.user_id == orphaned.id).first():
+                db.delete(orphaned)
+                db.commit()
+            raise
     elif not user.google_id:
         user.google_id = google_id
         db.commit()

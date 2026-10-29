@@ -81,13 +81,9 @@ class User(Base):
     # --- Account ---
     name = Column(String, default="")
     username = Column(String, unique=True, nullable=True)
-    account_type = Column(String, default="Free Plan")
-    email_product_updates = Column(Boolean, default=True)
-    email_security_alerts = Column(Boolean, default=True)
-    email_marketing = Column(Boolean, default=False)
 
     # --- Appearance ---
-    theme = Column(String, default="dark")
+    theme = Column(String, default="light")
     accent_color = Column(String, default="indigo")
     font_size = Column(String, default="medium")
     animations_enabled = Column(Boolean, default=True)

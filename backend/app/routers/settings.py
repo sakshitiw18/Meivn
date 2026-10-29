@@ -2,16 +2,17 @@
 REST endpoints backing the Settings page: Account, Appearance,
 Privacy & Data, and Security.
 
-Every one of these is scoped to the signed-in user (see routers/auth.py
-for how `current_user` is resolved from the bearer token) — the `User` row
-itself IS the settings record, since it was pre-filled at signup/login.
+Every one of these requires sign-in and is scoped to the signed-in user
+(see routers/auth.py for how `current_user` is resolved from the bearer
+token) — the `User` row itself IS the settings record, since it was
+pre-filled at signup/login.
 """
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models import User, SessionLog, Task
-from app.routers.auth import get_current_user_or_guest as get_current_user
+from app.routers.auth import get_current_user
 from app.security import hash_password, verify_password
 from app.schemas import (
     AccountSettingsOut, AccountSettingsUpdate, ChangePasswordRequest,
@@ -27,6 +28,12 @@ router = APIRouter(prefix="/api/settings", tags=["settings"])
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
+def _delete_user_projects(db: Session, user: User) -> None:
+    """Deletes this user's projects one by one so each project's agent steps cascade-delete with it."""
+    for task in db.query(Task).filter(Task.user_id == user.id).all():
+        db.delete(task)
+
 
 def apply_partial_update(obj, payload):
     for field, value in payload.model_dump(exclude_unset=True).items():
@@ -102,10 +109,10 @@ def change_password(
 @router.delete("/account")
 def delete_account(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     """
-    Permanently deletes THIS account and its sessions.
-    Projects (Tasks) are a shared workspace in this app, not per-user, so
-    they are intentionally left untouched.
+    Permanently deletes THIS account, its sessions, and its projects.
+    Other accounts' data is never touched.
     """
+    _delete_user_projects(db, current_user)
     db.query(SessionLog).filter(SessionLog.user_id == current_user.id).delete()
     db.delete(current_user)
     db.commit()
@@ -158,14 +165,13 @@ def update_privacy_settings(
 @router.get("/privacy/export")
 def export_data(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     """Returns everything the app has stored for this user, for the 'Export my data' button."""
-    tasks = db.query(Task).all()
+    tasks = db.query(Task).filter(Task.user_id == current_user.id).all()
 
     return {
         "account": {
             "name": current_user.name,
             "username": current_user.username,
             "email": current_user.email,
-            "account_type": current_user.account_type,
         },
         "settings": {
             "appearance": {
@@ -201,13 +207,13 @@ def export_data(current_user: User = Depends(get_current_user), db: Session = De
 
 
 @router.delete("/privacy/conversations")
-def clear_all_conversations(db: Session = Depends(get_db)):
+def clear_all_conversations(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     """
     Backs both 'Delete chat history' and 'Clear all conversations' — this app's
-    equivalent of conversation history is the list of generated projects (Tasks),
-    which are a shared workspace across everyone signed in.
+    equivalent of conversation history is the list of generated projects (Tasks).
+    Only the signed-in user's own projects are deleted.
     """
-    db.query(Task).delete()
+    _delete_user_projects(db, current_user)
     db.commit()
     return {"status": "cleared"}
 

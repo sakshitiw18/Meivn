@@ -31,7 +31,6 @@ class UserOut(BaseModel):
     name: str
     username: Optional[str] = None
     email: str
-    account_type: str
     auth_provider: str
 
     class Config:
@@ -108,10 +107,6 @@ class AccountSettingsOut(BaseModel):
     name: str
     username: str
     email: str
-    account_type: str
-    email_product_updates: bool
-    email_security_alerts: bool
-    email_marketing: bool
 
     class Config:
         from_attributes = True
@@ -121,9 +116,6 @@ class AccountSettingsUpdate(BaseModel):
     name: Optional[str] = None
     username: Optional[str] = None
     email: Optional[str] = None
-    email_product_updates: Optional[bool] = None
-    email_security_alerts: Optional[bool] = None
-    email_marketing: Optional[bool] = None
 
 
 class ChangePasswordRequest(BaseModel):

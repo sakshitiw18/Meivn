@@ -3,7 +3,7 @@ import ToggleSwitch from '../common/ToggleSwitch'
 
 const AppearanceSettings = () => {
   const [animations, setAnimations] = useState(true)
-  const [theme, setTheme] = useState('dark')
+  const [theme, setTheme] = useState('light')
   const [fontSize, setFontSize] = useState('medium')
 
   return (

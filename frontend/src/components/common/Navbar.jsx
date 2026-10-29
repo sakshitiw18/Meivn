@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
+import { useAuthContext } from '../../context/AuthContext'
 
 function Navbar() {
   const navigate = useNavigate()
   const location = useLocation()
+  const { isAuthenticated, loading, user, signOut } = useAuthContext()
   const [authDropdownOpen, setAuthDropdownOpen] = useState(false)
 
   const platformPages = [
@@ -47,6 +49,12 @@ function Navbar() {
     if (type === 'signup') {
       navigate('/auth?mode=signup')
     }
+  }
+
+  const handleLogout = async () => {
+    setAuthDropdownOpen(false)
+    await signOut()
+    navigate('/', { replace: true })
   }
 
   return (
@@ -98,54 +106,85 @@ function Navbar() {
           Platform
         </button>
 
-        {/* Sign In / Sign Up */}
-        <div className="auth-dropdown-wrapper relative inline-block text-left">
-
-          <button
-            type="button"
-            onClick={(event) => {
-              event.stopPropagation()
-              setAuthDropdownOpen((previous) => !previous)
-            }}
-            className="flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-gray-900 transition px-3 py-2 rounded-full hover:bg-gray-50 whitespace-nowrap"
-          >
-            <i className="fas fa-user-circle text-lg"></i>
-            Sign In / Sign Up
-          </button>
-
-          {/* Dropdown */}
-          <div
-            className={`original-auth-dropdown ${
-              authDropdownOpen
-                ? 'original-auth-dropdown-show'
-                : ''
-            }`}
-          >
-            <button
-              type="button"
-              onClick={() => handleAuth('signin')}
-              className="original-auth-dropdown-item"
-            >
-              <i className="fas fa-sign-in-alt"></i>
-              <span>Sign In</span>
-            </button>
+        {/* Account menu: Sign In / Sign Up when signed out, name + Log out when signed in */}
+        {loading ? (
+          <div className="w-40 h-9" />
+        ) : (
+          <div className="auth-dropdown-wrapper relative inline-block text-left">
 
             <button
               type="button"
-              onClick={() => handleAuth('signup')}
-              className="original-auth-dropdown-item"
+              onClick={(event) => {
+                event.stopPropagation()
+                setAuthDropdownOpen((previous) => !previous)
+              }}
+              className="flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-gray-900 transition px-3 py-2 rounded-full hover:bg-gray-50 whitespace-nowrap"
             >
-              <i className="fas fa-user-plus"></i>
-              <span>Sign Up</span>
+              <i className="fas fa-user-circle text-lg"></i>
+              {isAuthenticated ? (user?.name || 'My Account') : 'Sign In / Sign Up'}
             </button>
+
+            {/* Dropdown */}
+            <div
+              className={`original-auth-dropdown ${
+                authDropdownOpen
+                  ? 'original-auth-dropdown-show'
+                  : ''
+              }`}
+            >
+              {isAuthenticated ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAuthDropdownOpen(false)
+                      navigate('/settings')
+                    }}
+                    className="original-auth-dropdown-item"
+                  >
+                    <i className="fas fa-cog"></i>
+                    <span>Account Settings</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleLogout}
+                    className="original-auth-dropdown-item"
+                  >
+                    <i className="fas fa-sign-out-alt"></i>
+                    <span>Log out</span>
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => handleAuth('signin')}
+                    className="original-auth-dropdown-item"
+                  >
+                    <i className="fas fa-sign-in-alt"></i>
+                    <span>Sign In</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleAuth('signup')}
+                    className="original-auth-dropdown-item"
+                  >
+                    <i className="fas fa-user-plus"></i>
+                    <span>Sign Up</span>
+                  </button>
+                </>
+              )}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Launch Platform */}
         <button
           type="button"
           className="btn-primary text-white px-5 py-2 rounded-full text-sm font-semibold whitespace-nowrap"
-          onClick={() => navigate('/dashboard')}
+          onClick={() => navigate(isAuthenticated ? '/dashboard' : '/auth?mode=signin')}
         >
           Launch Platform
           <i className="fas fa-arrow-right ml-2"></i>

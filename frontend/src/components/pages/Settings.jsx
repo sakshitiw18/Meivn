@@ -271,19 +271,6 @@ const AccountSettings = () => {
     }
   }
 
-  const handleChangePassword = async () => {
-    const newPassword = window.prompt('Enter a new password (min 6 characters):')
-    if (!newPassword) return
-
-    try {
-      await changePassword(newPassword)
-      alert('Password updated.')
-    } catch (err) {
-      console.error(err)
-      alert('Could not update password. Make sure it is at least 6 characters.')
-    }
-  }
-
   const handleDeleteAccount = async () => {
     const confirmed = window.confirm(
       'This will permanently delete your account and ALL data — projects, memories, and settings. This cannot be undone. Continue?'
@@ -330,48 +317,6 @@ const AccountSettings = () => {
             <Input label="Username" value={draft.username} onChange={(value) => setDraft({ ...draft, username: value })} />
             <div className="lg:col-span-2">
               <Input label="Email" type="email" value={draft.email} onChange={(value) => setDraft({ ...draft, email: value })} />
-            </div>
-          </div>
-
-          <div className="pt-4 border-t border-gray-100">
-            <label className="text-sm font-medium text-gray-700">Account Type</label>
-            <div className="mt-2 flex items-center gap-4">
-              <span className="px-3 py-1 bg-indigo-50 text-indigo-600 rounded-full text-sm font-medium">
-                {draft.account_type}
-              </span>
-              <button type="button" className="text-sm text-indigo-600 hover:text-indigo-800">
-                Upgrade
-              </button>
-            </div>
-          </div>
-
-          <div className="pt-4 border-t border-gray-100">
-            <button type="button" onClick={handleChangePassword} className="text-sm text-indigo-600 hover:text-indigo-800 font-medium">
-              Change password
-            </button>
-          </div>
-
-          <div className="pt-4 border-t border-gray-100">
-            <label className="text-sm font-medium text-gray-700">Email preferences</label>
-            <div className="mt-2">
-              <ToggleRow
-                title="Product updates"
-                description="Receive emails about new features and improvements"
-                checked={draft.email_product_updates}
-                onChange={(value) => setDraft({ ...draft, email_product_updates: value })}
-              />
-              <ToggleRow
-                title="Security alerts"
-                description="Get notified about security events"
-                checked={draft.email_security_alerts}
-                onChange={(value) => setDraft({ ...draft, email_security_alerts: value })}
-              />
-              <ToggleRow
-                title="Marketing emails"
-                description="Promotional content and offers"
-                checked={draft.email_marketing}
-                onChange={(value) => setDraft({ ...draft, email_marketing: value })}
-              />
             </div>
           </div>
 
@@ -657,13 +602,6 @@ const PrivacySettings = () => {
             Clear all conversations
           </button>
           <p className="text-xs text-gray-400 mt-1">Clear all chat history (cannot be undone)</p>
-        </div>
-
-        <div className="pt-4 border-t border-gray-100">
-          <a href="#" onClick={(e) => e.preventDefault()} className="text-sm text-indigo-600 hover:text-indigo-800">
-            Privacy policy
-          </a>
-          <p className="text-xs text-gray-400 mt-1">Data retention: 30 days for free users, 90 days for Pro users</p>
         </div>
 
       </div>

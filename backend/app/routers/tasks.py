@@ -1,7 +1,11 @@
 """
-REST endpoints for creating and checking on multi-agent tasks.
+REST endpoints for creating and checking on multi-agent tasks (projects).
 The agent pipeline runs in a separate background thread; the frontend polls
 GET /api/tasks/{task_id} to see per-agent progress and the final report.
+
+Every project belongs to the account that created it. You can only list,
+open, or delete your own projects — a new account starts with none, and
+asking for someone else's project id returns "not found".
 """
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -9,24 +13,29 @@ import threading
 from sqlalchemy.orm import Session
 
 from app.database import get_db, SessionLocal
-from app.models import Task
+from app.models import Task, User
 from app.schemas import TaskCreate, TaskOut, TaskListItem
 from app.task_runner import run_task_pipeline
+from app.routers.auth import get_current_user
 
 router = APIRouter(prefix="/api/tasks", tags=["tasks"])
 
 
 @router.post("", response_model=TaskOut)
-def create_task(payload: TaskCreate, db: Session = Depends(get_db)):
+def create_task(
+    payload: TaskCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
     if not payload.user_request.strip():
         raise HTTPException(status_code=400, detail="user_request cannot be empty")
 
-    task = Task(user_request=payload.user_request, status="pending")
+    task = Task(user_id=current_user.id, user_request=payload.user_request, status="pending")
     db.add(task)
     db.commit()
     db.refresh(task)
 
-    print(f"[TASK] Created task: {task.id}")
+    print(f"[TASK] Created task: {task.id} (user: {current_user.email})")
 
     threading.Thread(
         target=_run_in_background,
@@ -63,8 +72,16 @@ def _run_in_background(task_id: str):
 
 
 @router.get("", response_model=list[TaskListItem])
-def list_tasks(db: Session = Depends(get_db)):
-    tasks = db.query(Task).order_by(Task.created_at.desc()).all()
+def list_tasks(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    tasks = (
+        db.query(Task)
+        .filter(Task.user_id == current_user.id)
+        .order_by(Task.created_at.desc())
+        .all()
+    )
 
     result = []
     for task in tasks:
@@ -82,8 +99,12 @@ def list_tasks(db: Session = Depends(get_db)):
 
 
 @router.get("/{task_id}", response_model=TaskOut)
-def get_task(task_id: str, db: Session = Depends(get_db)):
-    task = db.query(Task).filter(Task.id == task_id).first()
+def get_task(
+    task_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    task = db.query(Task).filter(Task.id == task_id, Task.user_id == current_user.id).first()
 
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
@@ -92,8 +113,12 @@ def get_task(task_id: str, db: Session = Depends(get_db)):
 
 
 @router.delete("/{task_id}", status_code=204)
-def delete_task(task_id: str, db: Session = Depends(get_db)):
-    task = db.query(Task).filter(Task.id == task_id).first()
+def delete_task(
+    task_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    task = db.query(Task).filter(Task.id == task_id, Task.user_id == current_user.id).first()
 
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")

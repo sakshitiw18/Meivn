@@ -7,9 +7,23 @@ const API_BASE_URL =
 
 const TOKEN_KEY = "meivn_auth_token";
 
-export const getToken = () => localStorage.getItem(TOKEN_KEY);
-export const setToken = (token) => localStorage.setItem(TOKEN_KEY, token);
-export const clearToken = () => localStorage.removeItem(TOKEN_KEY);
+// sessionStorage (not localStorage): the sign-in lasts while this browser tab
+// is open (refreshing is fine), but opening the website again — new tab or
+// after closing the browser — asks the user to sign in again.
+export const getToken = () => sessionStorage.getItem(TOKEN_KEY);
+export const setToken = (token) => sessionStorage.setItem(TOKEN_KEY, token);
+export const clearToken = () => sessionStorage.removeItem(TOKEN_KEY);
+
+// If the server says our session is no longer valid (expired, signed out from
+// another device, account deleted), drop the token and send the user to sign in.
+function handleUnauthorized() {
+  clearToken();
+
+  const path = window.location.pathname;
+  if (path !== "/" && path !== "/auth") {
+    window.location.assign("/auth?mode=signin");
+  }
+}
 
 function authHeaders() {
   const token = getToken();
@@ -92,6 +106,7 @@ export async function createTask(userRequest) {
   });
 
   if (!response.ok) {
+    if (response.status === 401) handleUnauthorized();
     throw new Error("Failed to create task");
   }
 
@@ -105,6 +120,7 @@ export async function getTask(taskId) {
   );
 
   if (!response.ok) {
+    if (response.status === 401) handleUnauthorized();
     throw new Error("Failed to fetch task");
   }
 
@@ -117,6 +133,7 @@ export async function getTasks() {
   });
 
   if (!response.ok) {
+    if (response.status === 401) handleUnauthorized();
     throw new Error("Failed to fetch tasks");
   }
 
@@ -130,6 +147,7 @@ export async function deleteTask(taskId) {
   });
 
   if (!response.ok) {
+    if (response.status === 401) handleUnauthorized();
     throw new Error("Failed to delete task");
   }
 
@@ -162,7 +180,7 @@ async function settingsRequest(path, options = {}) {
 
   if (!response.ok) {
     if (response.status === 401) {
-      clearToken();
+      handleUnauthorized();
     }
     throw new Error(`Settings request failed: ${path}`);
   }

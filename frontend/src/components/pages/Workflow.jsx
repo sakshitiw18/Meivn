@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useWorkflow } from '../../hooks/useWorkflow';
+import { getProjectDomain } from '../../utils/projectDomain';
 
 const AGENTS = [
   {
@@ -440,24 +441,17 @@ ${stripMarkdown(task?.final_report) || 'The multi-agent workflow has successfull
           );
 
           let iconColor = 'bg-gray-100 text-gray-400';
-          let checkmark = '';
 
           if (agent.status === 'completed') {
 
             statusClass = 'completed border-green-200';
-            statusLabel = 'Completed ✓';
+            statusLabel = 'Completed';
 
             iconContent = (
               <i className="fas fa-check"></i>
             );
 
             iconColor = 'bg-green-100 text-green-600';
-
-            checkmark = (
-              <span className="text-green-600 text-sm">
-                ✓
-              </span>
-            );
 
           } else if (agent.status === 'running') {
 
@@ -511,8 +505,6 @@ ${stripMarkdown(task?.final_report) || 'The multi-agent workflow has successfull
                   </div>
 
                 </div>
-
-                {checkmark}
 
               </div>
 
@@ -628,7 +620,7 @@ ${stripMarkdown(task?.final_report) || 'The multi-agent workflow has successfull
               </div>
 
               <div className="font-medium">
-                Multi-Agent
+                {getProjectDomain(task?.user_request || requirement)}
               </div>
 
             </div>
