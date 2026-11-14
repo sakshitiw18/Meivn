@@ -1,5 +1,6 @@
 <div align="center">
-**Meivn — Agentic Dev Workflow Engine**
+
+<h1><b>Meivn — Agentic Dev Workflow Engine</b></h1>
 
 **Turn a plain-English software requirement into a planned, researched, coded, reviewed and documented solution — using a team of five specialized AI agents.**
 
