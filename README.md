@@ -34,6 +34,7 @@
 - [Reliability](#reliability)
 - [Troubleshooting](#troubleshooting)
 - [Limitations & Future Scope](#limitations--future-scope)
+- [Team](#team)
 
 
 ---
@@ -353,6 +354,13 @@ All platform endpoints require an `Authorization: Bearer <token>` header (return
 - PostgreSQL, Docker and CI/CD for deployment
 - Support for more LLM providers and downloadable project scaffolds (ZIP)
 - Team workspaces and shared projects
+
+## Team
+
+| Name | Role |
+|------|------|
+| **Sakshi Tiwari** | Team Leader |
+| **Riya Awasthi** | Team Member |
 
 
 
